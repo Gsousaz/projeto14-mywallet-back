@@ -34,6 +34,12 @@ const schemaLogin = joi.object({
     email: joi.string().required().email()
 })
 
+const schemaTransacao = joi.object({
+  valor: joi.number().positive().precision(2).required(),
+  descricao: joi.string().required()
+})
+
+
 
   //-----------------------INICIO DA ROTA POST "/CADASTRO"-----------------------//
 
@@ -47,7 +53,7 @@ const schemaLogin = joi.object({
         if (validation.error) {
             const errors = validation.error.details.map ((detail) => detail.message);
             return res.status(422).send(errors);
-        }
+        }10
 
         const passwordHash = bcrypt.hashSync(password, 10);
         console.log(passwordHash)
@@ -70,7 +76,6 @@ const schemaLogin = joi.object({
     try { 
 
       const {email, password} = req.body;
-
       const user = await db.collection('users').findOne({email})
       if (!user) return res.status(404).send('Email não encontrado')
 
@@ -96,4 +101,39 @@ const schemaLogin = joi.object({
 
 
 
+    //-----------------------INICIO DA ROTA POST "/nova-transacao/"-----------------------//
+
+    app.post("/nova-transacao/:tipo", async (req, res) => {
+      
+      try {
+
+        const {authorization} = req.headers;
+        const token = authorization?.replace('Bearer: ', '');
+        if (!token) return res.sendStatus(401);
+
+        const validation = schemaTransacao.validate(req.body, {abortEarly: false});
+        if (validation.error) {
+            const errors = validation.error.details.map ((detail) => detail.message);
+            return res.status(422).send(errors);
+        }
+
+        const { tipo } = req.params;
+        const {valor, descricao} =  req.body;
+        const transaction = { tipo: tipo, valor: valor, descricao: descricao };
+
+        await db.collection('transactions').insertOne( transaction );
+        res.sendStatus(200);
+      } catch (err){
+        res.status(500).send(err.message)
+      }
+    }) 
+
+
+
+
+
+
+
+
+    
 app.listen(PORT, () => console.log(`O servidor está rodando na porta ${PORT}`));
