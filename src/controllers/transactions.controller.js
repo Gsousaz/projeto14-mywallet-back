@@ -6,7 +6,7 @@ export async function newTransaction(req, res) {
     const { valor, descricao } = req.body;
     const { userId } = res.locals.session;
 
-    const transaction = { tipo, valor: Number(valor), descricao, userId };
+    const transaction = { tipo, valor: Number(valor), descricao, userI };
 
     if (!tipo) return res.sendStatus(422);
     await db.collection("transactions").insertOne(transaction);

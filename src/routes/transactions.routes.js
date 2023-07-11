@@ -8,6 +8,6 @@ import { validateSession } from "../middlewares/validateSession.middleware.js";
 const transactionRouter = Router();
 
 transactionRouter.post("/nova-transacao/:tipo", validateSession, validateSchema(schemaTransacao), newTransaction);
-
+transactionRouter.get("/transactions", validateSession, showTransactions);
 
 export default transactionRouter;

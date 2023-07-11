@@ -21,3 +21,20 @@ export async function cadastro(req, res) {
 }
 
 
+export async function login(req, res) {
+    try {
+      const { email, password } = req.body;
+      const user = await db.collection("users").findOne({ email });
+      if (!user) return res.status(404).send("Email não encontrado");
+  
+      if (user && bcrypt.compareSync(password, user.password)) {
+        const token = uuid();
+        await db.collection("sessions").insertOne({ user: user.user, token });
+        res.status(200).send({ token, user: user.user });
+      } else {
+        res.status(401).send("Senha incorreta");
+      }
+    } catch (err) {
+      res.status(500).send(err.message);
+    }
+  }
