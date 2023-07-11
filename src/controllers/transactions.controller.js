@@ -4,11 +4,21 @@ export async function newTransaction(req, res) {
   try {
     const { tipo } = req.params;
     const { valor, descricao } = req.body;
-    const { userId } = res.locals.session;
+    const { _id } = res.locals.session;
+    console.log("userId", _id);
+    const data = Date.now();
+    const transaction = {
+      userId: _id,
+      tipo,
+      valor: Number(valor),
+      descricao,
+      data,
+    };
 
-    const transaction = { tipo, valor: Number(valor), descricao, userI };
+    if (!tipo) {
+      return res.sendStatus(422);
+    }
 
-    if (!tipo) return res.sendStatus(422);
     await db.collection("transactions").insertOne(transaction);
     res.sendStatus(200);
   } catch (err) {
@@ -18,8 +28,30 @@ export async function newTransaction(req, res) {
 
 export async function showTransactions(req, res) {
   try {
-    const transactions = await db.collection("transactions").find().toArray();
-    res.status(200).json(transactions);
+    const { authorization } = req.headers;
+    const token = authorization?.replace("Bearer ", "");
+
+    if (!token) {
+      return res.status(401).send("Não recebi token");
+    }
+
+    const user = await db.collection("sessions").findOne({ token });
+
+    if (!user) {
+      return res.status(401).send({ message: "Usuário não está logado!" });
+    }
+
+    console.log("user", user);
+    const userInfo = await db.collection("users").find({ userId: user._id }).toArray();
+    console.log("userInfo", user._id);
+
+    const transactions = await db
+      .collection("transactions")
+      .find({ userId: user._id })
+      .sort({ date: -1 })
+      .toArray();
+
+    res.send(transactions);
   } catch (err) {
     res.status(500).send(err.message);
   }

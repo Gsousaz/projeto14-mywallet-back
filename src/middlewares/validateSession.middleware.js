@@ -17,7 +17,11 @@ export async function validateSession(req, res, next) {
       return res.status(401).send("Não achei o token no banco");
     }
 
-    res.locals.session = session;
+    res.locals.session = session
+
+
+    console.log("session", res.locals.session)
+
 
     next();
   } catch (error) {
